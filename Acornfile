@@ -1,0 +1,56 @@
+args: {
+    railsEnv: "production"
+}
+
+profiles: {
+    dev: {
+        railsEnv: "development"
+    }
+}
+
+containers: {
+    server: {
+        build: {
+            context: "."
+        }
+        dependsOn: ["db"]
+        ports: publish: "3000/http"
+
+        env: {
+            DATABASE_HOST: "db"
+            DATABASE_NAME: "secret://db-name/token"
+            DATABASE_USERNAME: "secret://db-username/token"
+            DATABASE_PASSWORD: "secret://db-password/token"
+            RAILS_ENV: args.railsEnv
+        }
+
+        if args.dev {
+            dirs: {
+                "/app": "./"
+            }
+        }
+    }
+    db: {
+        image: "postgres"
+        ports: "5432/tcp"
+
+        env: {
+            POSTGRES_DB: "secret://db-name/token"
+            POSTGRES_USER: "secret://db-username/token"
+            POSTGRES_PASSWORD: "secret://db-password/token"
+        }
+        dirs: {
+            "/var/lib/postgresql/data": "volume://pg-data"
+        }
+    }
+}
+
+volumes: {
+    "pg-data": {}
+}
+
+secrets: {
+    "db-name": type: "token"
+    "db-username": type: "token"
+    "db-password": type: "token"
+}
